@@ -143,12 +143,80 @@ class BasicBlock4(BasicBlock):
         out = swish(out)
         return out
 
-class BasicBlock4SF(BasicBlock):
+class BasicBlock4SF(nn.Module):
+
+    expansion = 1
+
     ''' res-dualnet + w/o pw and use swish activation'''
+    def __init__(self, in_planes, planes, stride=1):
+        super(BasicBlock4SF, self).__init__()
+        # vanila resnet18 layer
+        self.conv1 = nn.Conv2d(
+            in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(planes)
+
+        # resdual18 layer - 1(DW stride 적용)
+        self.conv1_d1 = nn.Conv2d(
+            in_planes, in_planes, kernel_size=3, stride=stride, padding=1, groups=in_planes, bias=False)
+        self.conv1_d2 = nn.Conv2d(
+            in_planes, in_planes, kernel_size=3, stride=stride, padding=1, groups=in_planes, bias=False)
+        # self.conv1_p1 = nn.Conv2d(in_planes, planes, kernel_size=1, stride=1, padding=0, bias=False)
+        self.IS_SAME_CHANNEL = in_planes == planes
+
+        self.bn1_dw1 = nn.BatchNorm2d(in_planes)
+        self.bn1_dw2 = nn.BatchNorm2d(in_planes)
+        # self.bn1_pw = nn.BatchNorm2d(planes)
+
+        # vanila resnet18 layer
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
+                               stride=1, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(planes)
+
+        # resdual18 layer - 2
+        self.conv2_d1 = nn.Conv2d(planes,
+                                  planes,
+                                  kernel_size=3,
+                                  stride=1,
+                                  padding=1,
+                                  groups=planes,
+                                  bias=False)
+
+        self.conv2_d2 = nn.Conv2d(planes,
+                                  planes,
+                                  kernel_size=3,
+                                  stride=1,
+                                  padding=1,
+                                  groups=planes,
+                                  bias=False)
+        # self.conv2_p1 = nn.Conv2d(planes, planes, kernel_size=1, stride=1, padding=0, bias=False)
+
+        self.bn2_dw1 = nn.BatchNorm2d(planes)
+        self.bn2_dw2 = nn.BatchNorm2d(planes)
+        # self.bn2_pw = nn.BatchNorm2d(planes)
+
+        self.identify = nn.Identity()
+
+        self.shortcut = nn.Sequential()
+
+        if stride != 1 or in_planes != self.expansion * planes:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_planes, self.expansion * planes,
+                          kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(self.expansion * planes)
+            )
+
     def forward(self, x):
-        out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x))*0.5)
+        ## Concat & Shuffle OR Just Shuffle
+        if not self.IS_SAME_CHANNEL:
+            out1 = self.bn1_dw1(swish(0.5 * self.conv1_d1(x)))
+            out2 = self.bn1_dw2(swish(0.5 * self.conv1_d2(x)))
+            out = torch.cat((out1, out2), dim=1)
+        else:
+            out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x))*0.5)
+
         out = channel_shuffle(out, 4)
-        out = self.bn1_pw(self.conv1_p1(out))
+
+        # out = self.bn1_pw(self.conv1_p1(out))
         out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out))*0.5)
 
         out += self.shortcut(x)

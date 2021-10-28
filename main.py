@@ -232,8 +232,8 @@ for netkey in nets.keys():
     criterion = nn.CrossEntropyLoss()
     # optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
     # optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-4)
-    # optimizer = optim.Adam(net.parameters(), lr=2e-4, betas=(0.5, 0.999), weight_decay=5e-4) ## Conf.2
-    optimizer = optim.Adam(net.parameters(), lr=0.001)  ## Conf.2
+    optimizer = optim.Adam(net.parameters(), lr=2e-4, betas=(0.5, 0.999), weight_decay=5e-4) ## Conf.2
+    # optimizer = optim.Adam(net.parameters(), lr=0.001)  ## Conf.2
     # optimizer = optim.RMSprop(net.parameters(), lr=0.256, alpha=0.99, eps=1e-08, weight_decay=0.9, momentum=0.9, centered=False) # Conf.1
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=int(max_epoch * 1.0))
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 10, gamma=0.97, last_epoch=-1, verbose=True)
