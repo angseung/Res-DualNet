@@ -90,7 +90,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False,
 for image, label in trainloader:
     break
 
-img = image[0, :, :, :]
+img = image[43, :, :, :]
 plt.imshow(img.permute(1, 2, 0))
 plt.show()
 
@@ -101,3 +101,16 @@ conv_img = conv2d(img,
                   padding='same')
 
 plot_filter_ch(conv_img)
+
+model = ResNet18()
+
+for name, layer in enumerate(model.children()):
+    print(name, type(layer))
+
+    if 'Sequential' in layer.__class__.__name__:
+        for name_l, layer_l in enumerate(layer.children()):
+            print('\t', name_l, type(layer_l))
+
+        if 'BasicBlock' in layer_l.__class__.__name__:
+            for name_b, layer_b in enumerate(layer_l.children()):
+                print('\t\t', name_b, type(layer_b))
