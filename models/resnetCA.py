@@ -135,9 +135,10 @@ class BasicBlock3(BasicBlock):
 class BasicBlock4(BasicBlock):
     ''' res-dualnet + w/o pw and use swish activation'''
     def forward(self, x):
-        out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x))*0.5)
+        num_shuffle_groups = 4
+        out = self.bn1_dw1(swish(self.conv1_d1(x) + channel_shuffle(self.conv1_d2(x), num_shuffle_groups))*0.5)
         out = self.bn1_pw(self.conv1_p1(out))
-        out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out))*0.5)
+        out = self.bn2_dw1(swish(channel_shuffle(self.conv2_d1(out), num_shuffle_groups) + self.conv2_d2(out))*0.5)
 
         out += self.shortcut(x)
         out = swish(out)
@@ -165,7 +166,7 @@ class BasicBlock4SF(nn.Module):
 
         self.bn1_dw1 = nn.BatchNorm2d(in_planes)
         self.bn1_dw2 = nn.BatchNorm2d(in_planes)
-        # self.bn1_pw = nn.BatchNorm2d(planes)
+        self.bn1_dw3 = nn.BatchNorm2d(in_planes)
 
         # vanila resnet18 layer
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
@@ -212,12 +213,12 @@ class BasicBlock4SF(nn.Module):
             out2 = self.bn1_dw2(swish(0.5 * self.conv1_d2(x)))
             out = torch.cat((out1, out2), dim=1)
         else:
-            out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x))*0.5)
+            out = self.bn1_dw3(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
 
-        out = channel_shuffle(out, 4)
+        out = channel_shuffle(out, 16)
 
         # out = self.bn1_pw(self.conv1_p1(out))
-        out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out))*0.5)
+        out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
 
         out += self.shortcut(x)
         out = swish(out)
@@ -229,12 +230,12 @@ class BasicBlock5(BasicBlock):
         out1 = self.conv1_d1(x)
         out2 = self.conv1_d2(x)
 
-        out = self.bn1_dw1((out1*out2.sigmoid() + out2*out1.sigmoid())/2)
+        out = self.bn1_dw1((out1 * out2.sigmoid() + out2 * out1.sigmoid()) / 2)
         out = self.bn1_pw(self.conv1_p1(out))
 
         out1 = self.conv2_d1(out)
         out2 = self.conv2_d2(out)
-        out = self.bn2_dw1((out1*out2.sigmoid() + out2*out1.sigmoid())/2)
+        out = self.bn2_dw1((out1 * out2.sigmoid() + out2 * out1.sigmoid()) / 2)
 
         out += self.shortcut(x)
         out = swish(out)
@@ -245,7 +246,7 @@ class BasicBlockX0(BasicBlock):
     def forward(self, x):
         out1 = self.conv1_d1(x)
         out2 = self.conv1_d2(x)
-        out = out1*out2.sigmoid() + out2*out1.sigmoid()
+        out = out1 * out2.sigmoid() + out2 * out1.sigmoid()
         out = self.bn1_dw1(out/2)
         out = self.bn1_pw(self.conv1_p1(out))
 
@@ -287,6 +288,25 @@ class BasicBlockX2(BasicBlock):
     def forward(self, x):
         out1 = self.conv1_d1(x) * 0.5
         out2 = self.conv1_d2(x) * 0.5
+
+        out = out1 * out2.sigmoid() + out2 * out1.sigmoid()
+        out = self.bn1_pw(self.conv1_p1(out))
+
+        out1 = self.conv2_d1(out) * 0.5
+        out2 = self.conv2_d2(out) * 0.5
+        out = out1 * out2.sigmoid() + out2 * out1.sigmoid()
+
+        out += self.shortcut(x)
+        # out = swish(out)
+        return out
+
+
+class BasicBlockX3(BasicBlock):
+    ''' rexnet remove last activation + dw bn'''
+
+    def forward(self, x):
+        out1 = self.conv1_d1(x) * 0.5
+        out2 = channel_shuffle(self.conv1_d2(x) * 0.5, 2)
 
         out = out1 * out2.sigmoid() + out2 * out1.sigmoid()
         out = self.bn1_pw(self.conv1_p1(out))
@@ -388,7 +408,7 @@ def ResDaulNet18_TP4():
 
 
 def ResDaulNet18_TP5():
-    return ResNet(BasicBlock4SF, [2, 2, 2, 2])
+    return ResNet(BasicBlock4, [2, 2, 2, 2])
 
 def ResDaulNet18_TPI5():
     return ResNetImageNet(BasicBlock4, [2, 2, 2, 2])

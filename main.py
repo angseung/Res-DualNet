@@ -1,17 +1,23 @@
+import matplotlib.pyplot as plt
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 
 import torchvision
 import torchvision.transforms as transforms
+from torchvision.utils import make_grid
 import torch.onnx
 
 import os
+import time
+import datetime
 import argparse
 from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_checkpoint
 from models import *
 from models.resnetCA import ResDaulNet18_TP5
 from torchvision.models import mnasnet1_0, shufflenet_v2_x1_0, resnet18
 from thop import profile
+from models.vgg import Net
+from models.resnet import ResNet18
 
 INPUT_SIZE = 32
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -24,7 +30,7 @@ args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-max_epoch = 200
+max_epoch = 20
 
 
 
@@ -86,7 +92,9 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False,
 # classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 # bimage = VisdomImagePlotter('Train_batch')
-
+# for img, label in trainloader:
+#     plt.imshow(make_grid(img, normalize=True).permute(1, 2, 0))
+#     plt.show()
 
 # Training
 def train(epoch, dir_path=None, plotter=None):
@@ -184,12 +192,15 @@ def test(epoch, dir_path=None, plotter=None):
 
 
 # Model
+now = datetime.datetime.now()
+nowDatetime = now.strftime('%Y-%m-%d-%H-%M-%S')
 print('==> Building model..')
 
 nets = {
     # 'mnasnet1_0_%s' %str(INPUT_SIZE) : mnasnet1_0(num_classes=10)
     # 'resnet18_%s' %str(INPUT_SIZE) : torchvision.models.resnet18(num_classes=10),
-    'resdualnetSF_%s' % str(INPUT_SIZE): ResDaulNet18_TP5(),
+    'resnet18_%s' %str(INPUT_SIZE) : ResNet18(),
+    # 'simplenet_%s_%s' % (str(INPUT_SIZE), nowDatetime): Net(),
     # 'shufflenet_v2_x1_0_%s' %str(INPUT_SIZE) : shufflenet_v2_x1_0(num_classes=10),
     # 'efficientnet_b0_%s' %str(INPUT_SIZE) : EfficientNetB0(num_classes=10),
     # 'mobilenet_%s' %str(INPUT_SIZE) : MobileNet(num_classes=10),
@@ -197,7 +208,7 @@ nets = {
     # 'clnet_v0_image_adam': CLNet_V0(1000),
         }
 
-SAVE_CHECKPOINT = True
+SAVE_CHECKPOINT = 1
 
 for netkey in nets.keys():
     # visualization
@@ -232,8 +243,8 @@ for netkey in nets.keys():
     criterion = nn.CrossEntropyLoss()
     # optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
     # optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-4)
-    optimizer = optim.Adam(net.parameters(), lr=2e-4, betas=(0.5, 0.999), weight_decay=5e-4) ## Conf.2
-    # optimizer = optim.Adam(net.parameters(), lr=0.001)  ## Conf.2
+    # optimizer = optim.Adam(net.parameters(), lr=2e-4, betas=(0.5, 0.999), weight_decay=5e-4) ## Conf.2
+    optimizer = optim.Adam(net.parameters(), lr=0.0025)  ## Conf.2
     # optimizer = optim.RMSprop(net.parameters(), lr=0.256, alpha=0.99, eps=1e-08, weight_decay=0.9, momentum=0.9, centered=False) # Conf.1
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=int(max_epoch * 1.0))
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 10, gamma=0.97, last_epoch=-1, verbose=True)

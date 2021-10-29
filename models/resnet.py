@@ -7,6 +7,8 @@ Reference:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.utils import make_grid
+from matplotlib import pyplot as plt
 
 
 class BasicBlock(nn.Module):

@@ -1,12 +1,103 @@
 import torch
+import torch.nn as nn
+import torchvision
 from torchvision import models
+from torchvision.utils import make_grid
+import torchvision.transforms as transforms
+from matplotlib import pyplot as plt
+from models.resnet import ResNet18
+import numpy as np
+from torch.nn.functional import conv2d
+from utils import plot_filter_ch
 
-model = models.resnet18(num_classes=10)
+# reproducible option
+import random
+
+random_seed = 1
+torch.manual_seed(random_seed)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+random.seed(random_seed)
+torch.cuda.manual_seed(random_seed)
+torch.cuda.manual_seed_all(random_seed)  # multi-GPU
+np.random.seed(random_seed)
+
+def make_grid_norm(kernels, nrows=12):
+    kernels = kernels - kernels.min()
+    kernels = kernels / kernels.max()
+
+    return make_grid(kernels, nrows=nrows)
+
+model = ResNet18()
 model = torch.nn.DataParallel(model)
 optim = torch.optim.Adam(model.parameters())
+INPUT_SIZE = 32
 
-path = "outputs/resnet18_32/0_epoch.pth"
+path = "outputs/resnet18_32/19_epoch.pth"
 SAVEDAT = torch.load(path)
 
-# model.load_state_dict(SAVEDAT['state_dict'])
+model.load_state_dict(SAVEDAT['state_dict'])
 optim.load_state_dict(SAVEDAT['optimizer'])
+
+params = {}
+
+for name, p in model.named_parameters():
+    a = p.cpu().clone().detach().numpy()
+    params[name] = p.clone().detach()
+    print(name)
+    print(p.shape)
+
+    # if 'conv' in name:
+    #     p = p.cpu()
+    #     filter_img = make_grid_norm(p)
+    #     plt.imshow(filter_img.permute(1, 2, 0))
+
+normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+                                     std=[0.2023, 0.1994, 0.2010])
+if INPUT_SIZE == 32:
+    transform_train = transforms.Compose([
+        transforms.ToTensor(),
+        normalize])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        normalize
+    ])
+
+elif INPUT_SIZE == 224:
+    transform_train = transforms.Compose([
+                transforms.RandomResizedCrop(112),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize])
+
+    transform_test = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(112),
+        transforms.ToTensor(),
+        normalize
+    ])
+
+trainset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_train)
+# trainset = torchvision.datasets.ImageNet(root='C:/imagenet/', split = 'train', transform=transform_train)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=0)
+
+testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+# testset = torchvision.datasets.ImageNet(root='C:/imagenet/', split = 'val', transform=transform_test)
+testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=0)
+# classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
+for image, label in trainloader:
+    break
+
+img = image[0, :, :, :]
+plt.imshow(img.permute(1, 2, 0))
+plt.show()
+
+img = torch.reshape(img, (1, img.shape[0], img.shape[1], img.shape[2]))
+
+conv_img = conv2d(img,
+                  params['module.conv1.weight'].cpu(),
+                  padding='same')
+
+plot_filter_ch(conv_img)
