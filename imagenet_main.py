@@ -9,17 +9,17 @@ from utils import data_loader, progress_bar
 import math
 
 # reproducible option
-import random
-import numpy as np
-
-random_seed = 1
-torch.manual_seed(random_seed)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-random.seed(random_seed)
-torch.cuda.manual_seed(random_seed)
-torch.cuda.manual_seed_all(random_seed)  # multi-GPU
-np.random.seed(random_seed)
+# import random
+# import numpy as np
+#
+# random_seed = 1
+# torch.manual_seed(random_seed)
+# torch.backends.cudnn.deterministic = True
+# torch.backends.cudnn.benchmark = False
+# random.seed(random_seed)
+# torch.cuda.manual_seed(random_seed)
+# torch.cuda.manual_seed_all(random_seed)  # multi-GPU
+# np.random.seed(random_seed)
 
 # Check use GPU or not
 use_gpu = torch.cuda.is_available()  # use GPU
@@ -52,14 +52,17 @@ acc = SAVEDAT['acc']
 epoch = SAVEDAT['epoch']
 
 model_name = net.module.__class__.__name__
-print("%s model was loaded successfully... [epoch : %03d] [best validation acc : %.3f]"
-      %(model_name, epoch, acc))
+print("%s model was loaded successfully... [best validation acc : %.3f at %3d epoch]"
+      %(model_name, acc, epoch))
 
 mode = 'test'
-# input_size = 32
+
 input_size = 224
 dataset = "ImageNet"
+
+# input_size = 32
 # dataset = "CIFAR-10"
+
 batch_size = 100
 
 dataloader = data_loader(
@@ -83,7 +86,7 @@ macs_bil = total_macs / (10 ** 9)
 if mode == 'train':
     raise NotImplementedError()
 elif mode == 'test':
-    # Model to evaludation mode...
+    # Model conversion to evaludation mode...
     net.eval()
     test_loss = 0
     correct = 0
