@@ -319,22 +319,24 @@ def plot_hist(img, title):
 
 
 def data_loader(mode='test', dataset='ImageNet', input_size=224, batch_size=256, shuffle_opt=True):
-    if dataset == 'CIFAR-10':
+    # if dataset == 'CIFAR-10':
+    #     normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+    #                                      std=[0.2023, 0.1994, 0.2010])
+    #     # raise NotImplementedError
+    # elif dataset == 'ImageNet':
+    #     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+    #                              std=[0.229, 0.224, 0.225])
+
+    if dataset == 'CIFAR-10' and input_size == 32:
         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                          std=[0.2023, 0.1994, 0.2010])
-        # raise NotImplementedError
-    elif dataset == 'ImageNet':
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
-
-    if input_size == 32:
         if mode == 'train':
             transform_train = transforms.Compose([
                 transforms.ToTensor(),
                 normalize])
 
-            dataset = torchvision.datasets.CIFAR10(
-                root='./data',
+            data = torchvision.datasets.CIFAR10(
+                root='C:/cifar-10/',
                 train=True,
                 download=True,
                 transform=transform_train)
@@ -345,14 +347,16 @@ def data_loader(mode='test', dataset='ImageNet', input_size=224, batch_size=256,
                 normalize
             ])
 
-            dataset = torchvision.datasets.CIFAR10(
-                root='./data',
+            data = torchvision.datasets.CIFAR10(
+                root='C:/cifar-10/',
                 train=False,
                 download=True,
                 transform=transform_test)
         # raise NotImplementedError
 
-    elif input_size == 224:
+    elif dataset == 'ImageNet' and input_size == 224:
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
         if mode == 'train':
             transform_train = transforms.Compose([
                 transforms.RandomResizedCrop(224),
@@ -361,7 +365,7 @@ def data_loader(mode='test', dataset='ImageNet', input_size=224, batch_size=256,
                 transforms.ToTensor(),
                 normalize])
 
-            dataset = torchvision.datasets.ImageNet(
+            data = torchvision.datasets.ImageNet(
                 root='C:/imagenet/',
                 split='train',
                 transform=transform_train)
@@ -374,13 +378,13 @@ def data_loader(mode='test', dataset='ImageNet', input_size=224, batch_size=256,
                 normalize
             ])
 
-            dataset = torchvision.datasets.ImageNet(
+            data = torchvision.datasets.ImageNet(
                 root='C:/imagenet/',
                 split = 'val',
                 transform=transform_test)
 
     dataloader = torch.utils.data.DataLoader(
-        dataset,
+        data,
         batch_size=batch_size,
         shuffle=shuffle_opt,
         num_workers=0)
