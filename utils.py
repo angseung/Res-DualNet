@@ -322,13 +322,36 @@ def data_loader(mode='test', dataset='ImageNet', input_size=224, batch_size=256,
     if dataset == 'CIFAR-10':
         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                          std=[0.2023, 0.1994, 0.2010])
-        raise NotImplementedError
+        # raise NotImplementedError
     elif dataset == 'ImageNet':
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
     if input_size == 32:
-        raise NotImplementedError
+        if mode == 'train':
+            transform_train = transforms.Compose([
+                transforms.ToTensor(),
+                normalize])
+
+            dataset = torchvision.datasets.CIFAR10(
+                root='./data',
+                train=True,
+                download=True,
+                transform=transform_train)
+
+        elif mode == 'test':
+            transform_test = transforms.Compose([
+                transforms.ToTensor(),
+                normalize
+            ])
+
+            dataset = torchvision.datasets.CIFAR10(
+                root='./data',
+                train=False,
+                download=True,
+                transform=transform_test)
+        # raise NotImplementedError
+
     elif input_size == 224:
         if mode == 'train':
             transform_train = transforms.Compose([
