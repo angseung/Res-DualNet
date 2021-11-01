@@ -173,6 +173,7 @@ def test(epoch, dir_path=None, plotter=None):
         print('Saving..')
         state = {
             'net': net.state_dict(),
+            'optimizer' : optimizer.state_dict(),
             'acc': test_acc,
             'epoch': epoch,
         }
