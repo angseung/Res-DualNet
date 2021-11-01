@@ -355,10 +355,11 @@ def data_loader(mode='test', dataset='ImageNet', input_size=224, batch_size=256,
     elif input_size == 224:
         if mode == 'train':
             transform_train = transforms.Compose([
-                        transforms.RandomResizedCrop(112),
-                        transforms.RandomHorizontalFlip(),
-                        transforms.ToTensor(),
-                        normalize])
+                transforms.RandomResizedCrop(224),
+                # transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize])
 
             dataset = torchvision.datasets.ImageNet(
                 root='C:/imagenet/',
@@ -368,7 +369,7 @@ def data_loader(mode='test', dataset='ImageNet', input_size=224, batch_size=256,
         elif mode == 'test':
             transform_test = transforms.Compose([
                 transforms.Resize(256),
-                transforms.CenterCrop(112),
+                transforms.CenterCrop(224),
                 transforms.ToTensor(),
                 normalize
             ])

@@ -30,7 +30,7 @@ args = parser.parse_args()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-max_epoch = 20
+max_epoch = 5
 
 
 
@@ -200,7 +200,7 @@ print('==> Building model..')
 nets = {
     # 'mnasnet1_0_%s' %str(INPUT_SIZE) : mnasnet1_0(num_classes=10)
     # 'resnet18_%s' %str(INPUT_SIZE) : torchvision.models.resnet18(num_classes=10),
-    'resnet18_%s' %str(INPUT_SIZE) : ResNet18(),
+    'ResDaulNet18_TP5_%s' %str(INPUT_SIZE) : ResDaulNet18_TP5(),
     # 'simplenet_%s_%s' % (str(INPUT_SIZE), nowDatetime): Net(),
     # 'shufflenet_v2_x1_0_%s' %str(INPUT_SIZE) : shufflenet_v2_x1_0(num_classes=10),
     # 'efficientnet_b0_%s' %str(INPUT_SIZE) : EfficientNetB0(num_classes=10),

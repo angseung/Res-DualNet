@@ -4,6 +4,7 @@ import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from torchinfo import summary
 from models.resnetCA_ori import ResDaulNet18_TPI5
+from models.resnetCA import ResDaulNet18_TP5
 from utils import data_loader, progress_bar
 import math
 
@@ -29,11 +30,10 @@ else:
     raise NotImplementedError('CUDA Device needed to run this code...')
 
 # ImageNet
-# net = ResDaulNet18_TPI5()
+net = ResDaulNet18_TPI5()
 
 # CIFAR-10
-from models.resnet import ResNet18
-net = ResNet18()
+# net = ResDaulNet18_TP5()
 
 net.to(device)
 net = torch.nn.DataParallel(net)
@@ -44,7 +44,7 @@ cudnn.benchmark = True
 #  acc : best test acc,
 #  epoch : best performed epoch}
 
-pth_path = "./outputs/resnet18_32/ckpt_temp.pth"
+pth_path = "./outputs/resdual5_imagenet/ckpt.pth"
 SAVEDAT = torch.load(pth_path)
 
 net.load_state_dict(SAVEDAT['net'])
@@ -56,17 +56,17 @@ print("%s model was loaded successfully... [epoch : %03d] [best validation acc :
       %(model_name, epoch, acc))
 
 mode = 'test'
-input_size = 32
-# input_size = 224
-# dataset = "ImageNet"
-dataset = "CIFAR-10"
-# input_size = 224
+# input_size = 32
+input_size = 224
+dataset = "ImageNet"
+# dataset = "CIFAR-10"
+batch_size = 100
 
 dataloader = data_loader(
     mode=mode,
     dataset=dataset,
     input_size=input_size,
-    batch_size=100,
+    batch_size=batch_size,
     shuffle_opt=True
 )
 
