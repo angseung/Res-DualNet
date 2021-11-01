@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from models.resnet import ResNet18
 import numpy as np
 from torch.nn.functional import conv2d
-from utils import plot_filter_ch
+from utils import plot_filter_ch, plot_hist
 
 # reproducible option
 import random
@@ -26,7 +26,7 @@ def make_grid_norm(kernels, nrows=12):
     kernels = kernels - kernels.min()
     kernels = kernels / kernels.max()
 
-    return make_grid(kernels, nrows=nrows)
+    make_grid(kernels, nrows=nrows)
 
 model = ResNet18()
 model = torch.nn.DataParallel(model)
@@ -90,9 +90,9 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False,
 for image, label in trainloader:
     break
 
-img = image[43, :, :, :]
+img = image[0, :, :, :]
 plt.imshow(img.permute(1, 2, 0))
-plt.show()
+# plt.show()
 
 img = torch.reshape(img, (1, img.shape[0], img.shape[1], img.shape[2]))
 
@@ -100,17 +100,38 @@ conv_img = conv2d(img,
                   params['module.conv1.weight'].cpu(),
                   padding='same')
 
-plot_filter_ch(conv_img)
+# plot_filter_ch(conv_img)
 
-model = ResNet18()
+# model = ResNet18()
+x = image.to('cuda')
+# x = image
+# model.to('cpu')
+for net_name, model in enumerate(model.children()):
+    pass
 
 for name, layer in enumerate(model.children()):
     print(name, type(layer))
 
+    x = layer(x)
+    plot_filter_ch(
+        x.detach().cpu().numpy(),
+        title=layer.__class__.__name__)
+    plot_hist(
+        x.detach().cpu().numpy(),
+        title=layer.__class__.__name__)
+
     if 'Sequential' in layer.__class__.__name__:
         for name_l, layer_l in enumerate(layer.children()):
             print('\t', name_l, type(layer_l))
+            # x = layer_l(x)
 
         if 'BasicBlock' in layer_l.__class__.__name__:
             for name_b, layer_b in enumerate(layer_l.children()):
                 print('\t\t', name_b, type(layer_b))
+                x = layer_b(x)
+                plot_filter_ch(
+                    x.detach().cpu().numpy(),
+                    title=layer_b.__class__.__name__)
+                plot_hist(
+                    x.detach().cpu().numpy(),
+                    title=layer.__class__.__name__)

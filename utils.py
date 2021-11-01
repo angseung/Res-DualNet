@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from visdom import Visdom
 
+import torchvision
+import torchvision.transforms as transforms
+
 class VisdomLinePlotter(object):
     """Plots to Visdom"""
     def __init__(self, env_name='main'):
@@ -284,8 +287,13 @@ def plot_filters_multi_channel(t):
     plt.tight_layout()
     plt.show()
 
-def plot_filter_ch(img, width=8):
+def plot_filter_ch(img, title='', width=8):
     (b, c, h, w) = img.shape
+    if c <= 64:
+        width = 8
+    elif c >= 256:
+        width = 16
+
     hor = c // width
 
     fig = plt.figure(figsize=(8, 8))
@@ -295,4 +303,47 @@ def plot_filter_ch(img, width=8):
         plt.imshow(img[0, i, :, :])
         plt.axis('off')
 
+    plt.suptitle(title)
     plt.show()
+
+
+def plot_hist(img, title):
+    img = img.flatten()
+    std, mean = np.std(img), np.mean(img)
+
+    fig = plt.figure()
+    plt.hist(img, bins=10000)
+    plt.title("mean : %.4f std : %.4f, layer = %s" % (mean, std, title))
+    plt.tight_layout()
+    plt.show()
+
+
+def train_loader(dataset='CIFAR-10', input_size=32, batch_size=64, shuffle_opt=True):
+    if dataset == 'CIFAR-10':
+        raise NotImplementedError
+    elif dataset == 'ImageNet':
+        normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+                                         std=[0.2023, 0.1994, 0.2010])
+
+    if input_size == 32:
+        raise NotImplementedError
+    elif input_size == 224:
+        transform_train = transforms.Compose([
+                    transforms.RandomResizedCrop(112),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ToTensor(),
+                    normalize])
+
+        trainset = torchvision.datasets.ImageNet(
+            root='C:/imagenet/',
+            split='train',
+            transform=transform_train)
+
+    trainloader = torch.utils.data.DataLoader(
+        trainset,
+        batch_size=batch_size,
+        shuffle=shuffle_opt,
+        num_workers=0)
+
+    # (inputs, target) in enumerate(trainloader)
+    return trainloader
