@@ -318,32 +318,48 @@ def plot_hist(img, title):
     plt.show()
 
 
-def train_loader(dataset='CIFAR-10', input_size=32, batch_size=64, shuffle_opt=True):
+def data_loader(mode='test', dataset='ImageNet', input_size=224, batch_size=256, shuffle_opt=True):
     if dataset == 'CIFAR-10':
-        raise NotImplementedError
-    elif dataset == 'ImageNet':
         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                          std=[0.2023, 0.1994, 0.2010])
+        raise NotImplementedError
+    elif dataset == 'ImageNet':
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
 
     if input_size == 32:
         raise NotImplementedError
     elif input_size == 224:
-        transform_train = transforms.Compose([
-                    transforms.RandomResizedCrop(112),
-                    transforms.RandomHorizontalFlip(),
-                    transforms.ToTensor(),
-                    normalize])
+        if mode == 'train':
+            transform_train = transforms.Compose([
+                        transforms.RandomResizedCrop(112),
+                        transforms.RandomHorizontalFlip(),
+                        transforms.ToTensor(),
+                        normalize])
 
-        trainset = torchvision.datasets.ImageNet(
-            root='C:/imagenet/',
-            split='train',
-            transform=transform_train)
+            dataset = torchvision.datasets.ImageNet(
+                root='C:/imagenet/',
+                split='train',
+                transform=transform_train)
 
-    trainloader = torch.utils.data.DataLoader(
-        trainset,
+        elif mode == 'test':
+            transform_test = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(112),
+                transforms.ToTensor(),
+                normalize
+            ])
+
+            dataset = torchvision.datasets.ImageNet(
+                root='C:/imagenet/',
+                split = 'val',
+                transform=transform_test)
+
+    dataloader = torch.utils.data.DataLoader(
+        dataset,
         batch_size=batch_size,
         shuffle=shuffle_opt,
         num_workers=0)
 
-    # (inputs, target) in enumerate(trainloader)
-    return trainloader
+    # (inputs, target) in enumerate(dataloader)
+    return dataloader
