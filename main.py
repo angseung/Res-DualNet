@@ -209,7 +209,7 @@ nets = {
     # 'clnet_v0_image_adam': CLNet_V0(1000),
         }
 
-SAVE_CHECKPOINT = 1
+SAVE_CHECKPOINT = False
 
 for netkey in nets.keys():
     # visualization

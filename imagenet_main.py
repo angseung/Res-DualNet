@@ -7,11 +7,24 @@ from models.resnetCA_ori import ResDaulNet18_TPI5
 from utils import data_loader, progress_bar
 import math
 
+# reproducible option
+import random
+import numpy as np
+
+random_seed = 1
+torch.manual_seed(random_seed)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+random.seed(random_seed)
+torch.cuda.manual_seed(random_seed)
+torch.cuda.manual_seed_all(random_seed)  # multi-GPU
+np.random.seed(random_seed)
+
 # Check use GPU or not
 use_gpu = torch.cuda.is_available()  # use GPU
 
 if use_gpu:
-    device = torch.device("cuda:0")
+    device = torch.device("cuda")
 else:
     raise NotImplementedError('CUDA Device needed to run this code...')
 
@@ -35,6 +48,7 @@ epoch = SAVEDAT['epoch']
 model_name = net.module.__class__.__name__
 print("%s model was loaded successfully... [epoch : %03d] [best validation acc : %.3f]"
       %(model_name, epoch, acc))
+
 mode = 'test'
 input_size = 224
 
