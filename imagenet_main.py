@@ -8,19 +8,6 @@ from models.resnetCA import ResDaulNet18_TP5
 from utils import data_loader, progress_bar
 import math
 
-# reproducible option
-# import random
-# import numpy as np
-#
-# random_seed = 1
-# torch.manual_seed(random_seed)
-# torch.backends.cudnn.deterministic = True
-# torch.backends.cudnn.benchmark = False
-# random.seed(random_seed)
-# torch.cuda.manual_seed(random_seed)
-# torch.cuda.manual_seed_all(random_seed)  # multi-GPU
-# np.random.seed(random_seed)
-
 # Check use GPU or not
 use_gpu = torch.cuda.is_available()  # use GPU
 
@@ -42,6 +29,7 @@ cudnn.benchmark = True
 # Load checkpoint data
 # {net : net.state_dict,
 #  acc : best test acc,
+#  optimizer : optimizer.state_dict(),
 #  epoch : best performed epoch}
 
 pth_path = "./outputs/resdual5_imagenet/ckpt.pth"
@@ -52,7 +40,7 @@ acc = SAVEDAT['acc']
 epoch = SAVEDAT['epoch']
 
 model_name = net.module.__class__.__name__
-print("%s model was loaded successfully... [best validation acc : %.3f at %3d epoch]"
+print("%s model was loaded successfully... [best validation acc : %.3f at %03d epoch]"
       %(model_name, acc, epoch))
 
 mode = 'test'
@@ -73,7 +61,7 @@ dataloader = data_loader(
     shuffle_opt=True
 )
 
-print("Loading %s dataset completed..." %mode)
+print("Loading %s dataset completed..." % mode)
 
 # Get model params and macs...
 modelinfo = summary(net, (1, 3, input_size, input_size), verbose=0)
