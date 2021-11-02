@@ -9,6 +9,14 @@ from models.resnetCA import ResDaulNet18_TP5
 from utils import data_loader, progress_bar
 import math
 
+config ={
+    mode : 'test',
+    dataset : 'ImageNet',
+    pth_path : "./outputs/resdual5_imagenet/ckpt.pth",
+    input_size : 224,
+    batch_size : 100
+}
+
 def train(ep):
     print('\nEpoch: %d' % ep)
     net.train()
@@ -97,7 +105,7 @@ optimizer = optim.Adam(net.parameters(), lr=0.0025)
 #  optimizer : optimizer.state_dict(),
 #  epoch : best performed epoch}
 
-pth_path = "./outputs/resdual5_imagenet/ckpt.pth"
+pth_path = config['path']
 SAVEDAT = torch.load(pth_path)
 
 net.load_state_dict(SAVEDAT['net'])
@@ -109,21 +117,19 @@ model_name = net.module.__class__.__name__
 print("%s model was loaded successfully... [best validation acc : %.3f at %03d epoch]"
       %(model_name, acc, epoch))
 
-mode = 'test'
-
-input_size = 224
-dataset = "ImageNet"
+# mode = config['mode']
+# input_size = config['input_size']
+# dataset = config['dataset']
+# batch_size = config['batch_size']
 
 # input_size = 32
 # dataset = "CIFAR-10"
 
-batch_size = 100
-
 dataloader = data_loader(
-    mode=mode,
-    dataset=dataset,
-    input_size=input_size,
-    batch_size=batch_size,
+    mode=config['mode'],
+    dataset=config['dataset'],
+    input_size=config['input_size'],
+    batch_size=config['batch_size'],
     shuffle_opt=True
 )
 
